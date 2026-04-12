@@ -1,5 +1,5 @@
 <!-- [출처] https://min9805.github.io/stomp/ -->
-<!-- 액세스 토큰 인증 X / StompConfig 인증함수 비활성화 필요 -->
+<!-- CONNECT 외에는 액세스 토큰 인증 X, so WebsocketConfig 인증함수 비활성화 필요 -->
 <!doctype html>
 <html lang="ko">
   <head>
@@ -19,10 +19,11 @@
 
       function connectWebSocket() {
         const url = $('#websocketUrl').val(); // 웹소켓 URL 가져오기
+        const authorization = $('#authorization').val(); // 토큰 가져오기
 
         // websocket URL을 사용하여 stompClient 초기화
         stompClient = Stomp.client(url);
-        stompClient.connect({}, stompConnectHandler, stompErrorHandler);
+        stompClient.connect({"Authorization": authorization}, stompConnectHandler, stompErrorHandler);
       }
 
       function stompConnectHandler() {
@@ -112,8 +113,11 @@
   <body>
   <div class="container">
     <h1>WebSocket CONNECT</h1>
-    <div class="mb-3 input-group" style="width: 500px;">
+    <div class="mb-1 input-group" style="width: 500px;">
       <input type="text" id="websocketUrl" class="form-control" value="ws://localhost:8080/chat/stomp"/>
+    </div>
+    <div class="mb-3 input-group" style="width: 500px;">
+      <input type="text" id="authorization" class="form-control" placeholder="token 입력 (grant type 제외)"/>
       <button id="connectBtn" class="btn btn-primary">CONN</button>
     </div>
 
@@ -128,6 +132,7 @@
       <label for="destinationPath" class="form-label">DESTINATION PATH:</label>
       <input type="text" id="destinationPath" class="form-control" value="/pub/chat-room"/>
     </div>
+    <br/>
     <div class="mb-3">
       <label for="message" class="form-label">MESSAGE(JSON):</label>
       <textarea id="message" class="form-control">{ "chatRoomId": 1, "senderId": 1, "type": "TEXT", "content": "ㅎㅇ1", "parentMessageId": 1 }</textarea>

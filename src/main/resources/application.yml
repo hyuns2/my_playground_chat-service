@@ -3,8 +3,7 @@ server:
 
 spring:
   application:
-    name:
-      playground
+    name: chat-service
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}

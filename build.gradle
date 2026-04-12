@@ -34,7 +34,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // security
-    implementation 'io.playground:security-core:1.0.1'
+    implementation 'io.playground:security-core:1.0.0'
 
     // devtools
     compileOnly 'org.projectlombok:lombok'
