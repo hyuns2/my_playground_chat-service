@@ -1,7 +1,7 @@
 package io.playground.chatservice.infrastructure.pubsub;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.playground.chatservice.application.chat.dto.ChatMessageInfoDto;
+import io.playground.chatservice.application.chat.dto.ChatDto;
 import io.playground.chatservice.exception.CustomErrorCode;
 import io.playground.chatservice.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,16 @@ public class ChatBroadcastListener implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        ChatMessageInfoDto dto;
+        String payload = new String(message.getBody());
+        ChatDto.ChatMessageInfo dto;
 
         try {
+            if (payload.startsWith("\""))
+                payload = objectMapper.readValue(payload, String.class);
+
             dto = objectMapper.readValue(
-                    message.getBody(),
-                    ChatMessageInfoDto.class
+                    payload,
+                    ChatDto.ChatMessageInfo.class
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -32,7 +36,7 @@ public class ChatBroadcastListener implements MessageListener {
         }
 
         messageSendingOps.convertAndSend(
-                "/sub/chat-room" + dto.getChatRoomId(),
+                "/sub/chat-room/" + dto.getChatRoomId(),
                 dto
         );
     }

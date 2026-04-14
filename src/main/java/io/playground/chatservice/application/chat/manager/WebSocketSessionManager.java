@@ -2,7 +2,10 @@ package io.playground.chatservice.application.chat.manager;
 
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -28,6 +31,7 @@ public class WebSocketSessionManager {
 
             participants.get(roomId).add(userId);
         }
+
         return newRoomIds;
     }
 
@@ -44,6 +48,7 @@ public class WebSocketSessionManager {
             if (participants.get(roomId).isEmpty())
                 emptyRoomIds.add(roomId);
         }
+
         return emptyRoomIds;
     }
 

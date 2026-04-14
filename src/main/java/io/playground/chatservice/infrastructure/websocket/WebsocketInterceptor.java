@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -23,16 +22,27 @@ public class WebsocketInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         try {
             StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
             assert accessor != null;
-            if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                // 일단 grant type 제외해서 토큰만 전달하도록!
-                Authentication authentication = jwtAuthenticationProvider.getAuthentication(
-                        accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION)
-                );
+            assert accessor.getCommand() != null;
 
-                AuthPrincipal authPrincipal = (AuthPrincipal) authentication.getPrincipal();
-                sessionHandler.onConnect(authPrincipal.userId(), authPrincipal.deviceId());
+            switch (accessor.getCommand()) {
+                case CONNECT -> {
+                    // 일단 grant type 제외해서 토큰만 전달하도록!
+                    Authentication authentication = jwtAuthenticationProvider.getAuthentication(
+                            accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION)
+                    );
+
+                    AuthPrincipal authPrincipal = (AuthPrincipal) authentication.getPrincipal();
+                    sessionHandler.onConnect(authPrincipal.userId(), authPrincipal.deviceId());
+                }
+                case DISCONNECT -> {
+                    Authentication authentication = jwtAuthenticationProvider.getAuthentication(
+                            accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION)
+                    );
+
+                    AuthPrincipal authPrincipal = (AuthPrincipal) authentication.getPrincipal();
+                    sessionHandler.onDisconnect(authPrincipal.userId(), authPrincipal.deviceId());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
