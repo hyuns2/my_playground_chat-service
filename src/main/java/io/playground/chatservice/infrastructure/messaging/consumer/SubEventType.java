@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum SubEventType {
-    USER_PROFILE_UPDATED(0, "user.profile.updated"),
+    USER_PROFILE_CREATED(0, "user.profile.created"),
     CHAT_MESSAGE_SENT(1, "chat.message.sent");
 
     private final int code;

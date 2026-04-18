@@ -12,12 +12,12 @@ public class EventStreamNamingStrategy implements io.playground.chatservice.appl
             case CHAT_EVENTS ->
                     streamType.getPrefix();
             case CHAT_MESSAGES ->
-                    streamType.getPrefix() + key;
+                    streamType.getPrefix();
         };
     }
 
     @Override
-    public String toGroupName(EventStreamType streamType, String key, EventGroupType groupType) {
-        return toStreamName(streamType, key) + groupType.getValue();
+    public String toGroupName(String streamName, EventGroupType groupType) {
+        return streamName + groupType.getValue();
     }
 }

@@ -14,7 +14,6 @@ import java.util.Map;
 public class RedisEventPublisher {
     private final StringRedisTemplate stringRedisTemplate;
 
-    // ToDo: 스트림, 컨슈머 그룹 없으면 만들 것
     public void publish(String streamName, Map<String, String> envelope) {
         try {
             stringRedisTemplate.opsForStream()

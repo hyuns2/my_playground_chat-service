@@ -11,7 +11,21 @@ public record CreateChatRoomCommand(
         String name,
         List<String> participantIds
 ) {
-    public static CreateChatRoomCommand from(String userId, ChatRequestDto.CreateChatRoom dto) {
+    public static CreateChatRoomCommand of(String creatorId,
+                                           ChatRoom.RoomType type,
+                                           String name,
+                                           List<String> participantIds
+    ) {
+        return new CreateChatRoomCommand(
+                creatorId,
+                type,
+                name,
+                participantIds
+        );
+    }
+
+    public static CreateChatRoomCommand from(String userId,
+                                             ChatRequestDto.CreateChatRoom dto) {
         return new CreateChatRoomCommand(
                 userId,
                 dto.getType(),

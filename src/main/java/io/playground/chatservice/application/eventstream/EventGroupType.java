@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EventGroupType {
     VIEW_UPDATER(":cg:view-updater"),
-    DB_WRITER(":cg:db-writer"),
     MESSAGE_PUBLISHER(":cg:message-publisher");
 
     private final String value;

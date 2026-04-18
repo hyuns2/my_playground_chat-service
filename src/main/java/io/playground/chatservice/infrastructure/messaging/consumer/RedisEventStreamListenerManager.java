@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.playground.chatservice.application.chat.handler.MessageHandler;
 import io.playground.chatservice.exception.CustomErrorCode;
 import io.playground.chatservice.exception.CustomException;
+import io.playground.chatservice.infrastructure.messaging.EventEnvelope;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -42,9 +43,14 @@ public class RedisEventStreamListenerManager {
                 StreamOffset.create(streamName, ReadOffset.lastConsumed()),
                 message -> {
                     try {
+                        EventEnvelope eventEnvelope = objectMapper.convertValue(
+                                message.getValue(),
+                                EventEnvelope.class
+                        );
+
                         messageHandler.handle(
                                 objectMapper.readValue(
-                                        message.getValue().get("payload"),
+                                        eventEnvelope.getPayload(),
                                         eventClassType
                                 )
                         );

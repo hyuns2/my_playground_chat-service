@@ -2,8 +2,6 @@ package io.playground.chatservice.infrastructure.persistence.view.adapter;
 
 import io.playground.chatservice.application.read.model.UserView;
 import io.playground.chatservice.application.read.port.UserViewQueryPort;
-import io.playground.chatservice.exception.CustomErrorCode;
-import io.playground.chatservice.exception.CustomException;
 import io.playground.chatservice.infrastructure.persistence.view.entity.UserViewJpaEntity;
 import io.playground.chatservice.infrastructure.persistence.view.repository.UserViewJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +18,13 @@ public class UserViewPersistenceAdapter implements UserViewQueryPort {
     @Override
     public Optional<UserView> findById(String userId) {
         UserViewJpaEntity entity = userViewRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PARTICIPANT_NOT_FOUND));
+                .orElse(null);
 
-        return Optional.ofNullable(entity.toDomain());
+        return Optional.ofNullable(
+                entity != null ?
+                        entity.toDomain() :
+                        null
+        );
     }
 
     @Override

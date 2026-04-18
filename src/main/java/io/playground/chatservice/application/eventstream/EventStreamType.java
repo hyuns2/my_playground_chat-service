@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EventStreamType {
     CHAT_EVENTS("chat:events"),
-    CHAT_MESSAGES("chat:messages:room:");
+    CHAT_MESSAGES("chat:messages:room");
 
     private final String prefix;
 }
