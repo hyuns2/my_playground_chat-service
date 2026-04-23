@@ -25,18 +25,18 @@ public class ChatRoomJpaEntity {
     @Column
     private String name;
 
-    @Column
-    private LocalDateTime lastMessageAt;
+    @Column(nullable = false)
+    private LocalDateTime lastMessagedAt;
     
     public static ChatRoomJpaEntity of(Long id,
                                          ChatRoom.RoomType type,
                                          String name,
-                                         LocalDateTime lastMessageAt) {
+                                         LocalDateTime lastMessagedAt) {
         return new ChatRoomJpaEntity(
                 id,
                 type,
                 name,
-                lastMessageAt
+                lastMessagedAt
         );
     }
 

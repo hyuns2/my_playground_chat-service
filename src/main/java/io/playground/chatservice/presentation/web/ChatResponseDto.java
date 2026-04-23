@@ -1,9 +1,9 @@
 package io.playground.chatservice.presentation.web;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.playground.chatservice.application.chat.dto.ChatDto;
 import io.playground.chatservice.domain.chat.message.ChatMessage;
 import io.playground.chatservice.domain.chat.room.ChatRoom;
-import io.playground.chatservice.infrastructure.persistence.chat.dto.ChatQueryDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,14 +23,17 @@ public class ChatResponseDto {
 
         String name;
 
+        LocalDateTime lastMessagedAt;
+
         List<ParticipantInfo> participantInfos;
 
-        public static GetChatRoomInfo from(ChatQueryDto.ChatRoomInfo queryDto) {
+        public static GetChatRoomInfo from(ChatDto.ChatRoomInfo dto) {
             return new GetChatRoomInfo(
-                    queryDto.getChatRoomId(),
-                    queryDto.getType(),
-                    queryDto.getName(),
-                    queryDto.getParticipantInfos().stream()
+                    dto.getChatRoomId(),
+                    dto.getType(),
+                    dto.getName(),
+                    dto.getLastMessagedAt(),
+                    dto.getParticipantInfos().stream()
                             .map(ParticipantInfo::from)
                             .toList()
             );
@@ -45,10 +48,10 @@ public class ChatResponseDto {
 
         String nickName;
 
-        @JsonProperty("admin")
+        @JsonProperty("isAdmin")
         boolean isAdmin;
 
-        private static ParticipantInfo from(ChatQueryDto.ParticipantInfo info) {
+        private static ParticipantInfo from(ChatDto.ParticipantInfo info) {
             return new ParticipantInfo(
                     info.getId(),
                     info.getNickName(),
@@ -63,13 +66,13 @@ public class ChatResponseDto {
     public static class GetChatMessagesInfo {
         Map<String, Long> lastReadMessageIdInfos;
 
-        List<ChatMessageInfo> chatMessageInfos;
+        List<ChatMessageInfo> chatMessageInfoInfos;
 
-        public static GetChatMessagesInfo from(ChatQueryDto.ChatMessagesInfo result) {
+        public static GetChatMessagesInfo from(ChatDto.ChatMessagesInfo result) {
             return new GetChatMessagesInfo(
                     result.getLastReadMessageIdInfos(),
-                    result.getChatMessages().stream()
-                            .map(ChatMessageInfo::from)
+                    result.getChatMessageInfos().stream()
+                            .map(ChatResponseDto.ChatMessageInfo::from)
                             .toList()
             );
         }
@@ -91,7 +94,7 @@ public class ChatResponseDto {
 
         LocalDateTime createdAt;
 
-        public static ChatMessageInfo from(ChatQueryDto.ChatMessage info) {
+        public static ChatMessageInfo from(ChatDto.ChatMessageInfo info) {
             return new ChatMessageInfo(
                     info.getChatMessageId(),
                     info.getSenderId(),

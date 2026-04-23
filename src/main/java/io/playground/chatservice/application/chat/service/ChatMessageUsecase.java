@@ -2,10 +2,10 @@ package io.playground.chatservice.application.chat.service;
 
 import io.playground.chatservice.application.chat.command.GetChatMessagesCommand;
 import io.playground.chatservice.application.chat.command.SendChatMessageCommand;
-import io.playground.chatservice.infrastructure.persistence.chat.dto.ChatQueryDto;
+import io.playground.chatservice.application.chat.dto.ChatDto;
 
 public interface ChatMessageUsecase {
-    ChatQueryDto.ChatMessagesInfo getChatMessages(GetChatMessagesCommand command);
+    Long sendChatMessage(SendChatMessageCommand command);
 
-    void sendChatMessage(SendChatMessageCommand command);
+    ChatDto.ChatMessagesInfo getChatMessages(GetChatMessagesCommand command);
 }

@@ -13,6 +13,21 @@ public record SendChatMessageCommand(
         Long parentMessageId,
         LocalDateTime createdAt
 ) {
+    public static SendChatMessageCommand of(String senderId,
+                                            Long chatRoomId,
+                                            ChatMessage.MessageType type,
+                                            String content,
+                                            Long parentMessageId) {
+        return new SendChatMessageCommand(
+                senderId,
+                chatRoomId,
+                type,
+                content,
+                parentMessageId,
+                LocalDateTime.now()
+        );
+    }
+
     public static SendChatMessageCommand from(ChatRequestDto.SendChatMessage dto) {
         return new SendChatMessageCommand(
                 dto.getSenderId(),

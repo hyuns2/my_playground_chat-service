@@ -1,7 +1,7 @@
 package io.playground.chatservice.infrastructure.persistence.chat.entity;
 
+import io.playground.chatservice.application.chat.dto.ChatDto;
 import io.playground.chatservice.domain.chat.message.ChatMessage;
-import io.playground.chatservice.infrastructure.persistence.chat.dto.ChatQueryDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "CHAT_MESSAGE")
+@Table(name = "CHAT_MESSAGE", indexes = {
+        @Index(name = "idx_chatRoomId_createdAt", columnList = "chat_room_id, created_at")
+})
 public class ChatMessageJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,15 +74,15 @@ public class ChatMessageJpaEntity {
         );
     }
 
-    public ChatQueryDto.ChatMessage toDto() {
-        return ChatQueryDto.ChatMessage.of(
-                this.id,
-                this.chatRoom.getId(),
-                this.senderId,
-                this.type,
-                this.content,
-                this.parentMessage != null ? this.parentMessage.getId() : null,
-                this.createdAt
+    public static ChatDto.ChatMessageInfo toDto(ChatMessageJpaEntity entity) {
+        return new ChatDto.ChatMessageInfo(
+                entity.getId(),
+                entity.getChatRoom().getId(),
+                entity.getSenderId(),
+                entity.getType(),
+                entity.getContent(),
+                entity.getParentMessage() != null ? entity.getParentMessage().getId() : null,
+                entity.getCreatedAt()
         );
     }
 }

@@ -8,7 +8,9 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "CHAT_PARTICIPANT")
+@Table(name = "CHAT_PARTICIPANT", indexes = {
+        @Index(name = "idx_participantId_chatRoomId", columnList = "participant_id, chat_room_id")
+})
 public class ChatParticipantJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

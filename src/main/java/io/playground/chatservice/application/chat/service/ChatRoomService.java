@@ -1,26 +1,22 @@
 package io.playground.chatservice.application.chat.service;
 
 import io.playground.chatservice.application.chat.command.CreateChatRoomCommand;
+import io.playground.chatservice.application.chat.dto.ChatDto;
 import io.playground.chatservice.application.chat.port.ChatParticipantRepositoryPort;
 import io.playground.chatservice.application.chat.port.ChatRoomRepositoryPort;
-import io.playground.chatservice.application.chat.port.EventPublisherPort;
-import io.playground.chatservice.application.eventstream.PubEventType;
 import io.playground.chatservice.application.read.model.UserView;
 import io.playground.chatservice.application.read.port.UserViewQueryPort;
 import io.playground.chatservice.domain.chat.ChatParticipant;
-import io.playground.chatservice.domain.chat.message.ChatMessage;
-import io.playground.chatservice.domain.chat.message.ChatMessageSentEvent;
 import io.playground.chatservice.domain.chat.room.ChatRoom;
 import io.playground.chatservice.exception.CustomErrorCode;
 import io.playground.chatservice.exception.CustomException;
-import io.playground.chatservice.infrastructure.persistence.chat.dto.ChatQueryDto;
+import io.playground.chatservice.infrastructure.persistence.chat.dto.ChatFlatInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +24,6 @@ public class ChatRoomService implements ChatRoomUsecase {
     private final UserViewQueryPort userViewQueryPort;
     private final ChatRoomRepositoryPort chatRoomRepositoryPort;
     private final ChatParticipantRepositoryPort chatParticipantRepositoryPort;
-    private final EventPublisherPort eventPublisherPort;
 
     @Override
     @Transactional
@@ -41,20 +36,19 @@ public class ChatRoomService implements ChatRoomUsecase {
         if (userViews.size() != command.participantIds().size())
             throw new CustomException(CustomErrorCode.PARTICIPANT_NOT_FOUND);
 
+        // Todo: 추후 채팅방 생성시점도 request에서 받도록 변경
         ChatRoom chatRoom = ChatRoom.of(
                 null,
                 command.type(),
                 command.name(),
-                null
+                LocalDateTime.now()
         );
-        Long chatRoomId = chatRoomRepositoryPort.save(chatRoom);
-
         List<ChatParticipant> chatParticipants = new ArrayList<>();
         for (UserView userView : userViews) {
             chatParticipants.add(
                     ChatParticipant.of(
                             null,
-                            chatRoomId,
+                            null,
                             userView.getUserId(),
                             userView.getNickName(),
                             userView.getUserId().equals(command.creatorId()),
@@ -62,29 +56,41 @@ public class ChatRoomService implements ChatRoomUsecase {
                     )
             );
         }
-        chatParticipantRepositoryPort.saveAll(chatParticipants);
-
-        // Todo: 추후 채팅방 생성시점도 request에서 받도록 변경
-        eventPublisherPort.publish(
-                PubEventType.CHAT_MESSAGE_SENT,
-                chatRoomId.toString(),
-                ChatMessageSentEvent.of(
-                        chatRoomId,
-                        command.creatorId(),
-                        ChatMessage.MessageType.IN,
-                        "채팅방이 생성되었습니다.",
-                        null,
-                        LocalDateTime.now()
-                )
-        );
-
-        return chatRoomId;
+        return chatRoomRepositoryPort.saveChatRoomWithParticipants(chatRoom, chatParticipants);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatQueryDto.ChatRoomInfo> getChatRooms(String userId) {
-        return chatParticipantRepositoryPort.findChatInfosByParticipantId(userId);
+    public List<ChatDto.ChatRoomInfo> getChatRooms(String userId) {
+        List<ChatFlatInfo> flatInfos = chatParticipantRepositoryPort
+                .findChatInfosByParticipantId(userId);
+
+        Map<Long, ChatDto.ChatRoomInfo> result = new HashMap<>();
+        for (ChatFlatInfo flatInfo: flatInfos) {
+            if (!result.containsKey(flatInfo.chatRoomId()))
+                result.put(
+                        flatInfo.chatRoomId(),
+                        ChatDto.ChatRoomInfo.of(
+                                flatInfo.chatRoomId(),
+                                flatInfo.type(),
+                                flatInfo.name(),
+                                flatInfo.lastMessagedAt()
+                        )
+                );
+
+            result.get(flatInfo.chatRoomId())
+                    .addParticipantInfo(
+                            ChatDto.ParticipantInfo.of(
+                                    flatInfo.participantId(),
+                                    flatInfo.nickName(),
+                                    flatInfo.isAdmin()
+                            )
+                    );
+        }
+
+        return result.values().stream()
+                .sorted(Comparator.comparing(ChatDto.ChatRoomInfo::getLastMessagedAt).reversed())
+                .toList();
     }
 
     @Override

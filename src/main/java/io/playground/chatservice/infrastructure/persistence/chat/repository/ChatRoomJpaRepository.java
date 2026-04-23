@@ -9,6 +9,6 @@ import java.time.LocalDateTime;
 
 public interface ChatRoomJpaRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
     @Modifying
-    @Query("update ChatRoomJpaEntity c set c.lastMessageAt = :createdAt where c.id = :chatRoomId")
+    @Query("update ChatRoomJpaEntity c set c.lastMessagedAt = :createdAt where c.id = :chatRoomId")
     void updateLastMessageAtByChatRoomId(LocalDateTime createdAt, Long chatRoomId);
 }
