@@ -3,7 +3,7 @@ package io.playground.chatservice;
 import org.junit.jupiter.api.Test;
 
 //@SpringBootTest
-class ChatServiceApplicationTests {
+class ChatRoomServiceApplicationTests {
 
     @Test
     void contextLoads() {
