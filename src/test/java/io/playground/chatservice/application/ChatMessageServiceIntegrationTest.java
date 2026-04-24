@@ -221,8 +221,8 @@ public class ChatMessageServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("특정 채팅방의 및 정보 조회")
-    void getChatMessages() {
+    @DisplayName("페이징 방식으로 특정 채팅방의 및 정보 조회")
+    void getChatMessages_페이징() {
         // given
         Long chatRoomId = chatRoomService.createChatRoom(
                 CreateChatRoomCommand.of(
@@ -275,11 +275,10 @@ public class ChatMessageServiceIntegrationTest extends BaseIntegrationTest {
         log.info("\n=== Test Start ===");
         watch.start("쿼리 최적화 후 채팅메시지 조회");
 
-        ChatDto.ChatMessagesInfo result = service.getChatMessages(GetChatMessagesCommand.of(
+        ChatDto.ChatMessagesInfo result = service.getChatMessagesWithPaging(GetChatMessagesCommand.of(
                 "46700624-2054-4df6-a9f4-10424a46eccd",
                 chatRoomId,
-                0,
-                2
+                0 + "_" + 2
         ));
         entityManager.flush();
         entityManager.clear();
@@ -304,5 +303,94 @@ public class ChatMessageServiceIntegrationTest extends BaseIntegrationTest {
                 .containsOnly(
                         chatMessageId3
                 );
+    }
+
+    @Test
+    @DisplayName("커서 방식으로 특정 채팅방의 및 정보 조회")
+    void getChatMessages_커서() {
+        // given
+        Long chatRoomId = chatRoomService.createChatRoom(
+                CreateChatRoomCommand.of(
+                        "f52b1459-7061-465b-b230-b5bbce14e553",
+                        ChatRoom.RoomType.GROUP,
+                        "테스트 채팅방1",
+                        new ArrayList<>(
+                                List.of(
+                                        "46700624-2054-4df6-a9f4-10424a46eccd",
+                                        "68e000ef-e717-4b1e-97f1-1baabafda524"
+                                )
+                        )
+                )
+        );
+        entityManager.flush();
+        entityManager.clear();
+
+        Long chatMessageId1 = service.sendChatMessage(SendChatMessageCommand.of(
+                "f52b1459-7061-465b-b230-b5bbce14e553",
+                chatRoomId,
+                ChatMessage.MessageType.TEXT,
+                "안녕하세요1",
+                null
+        ));
+        entityManager.flush();
+        entityManager.clear();
+
+        Long chatMessageId2 = service.sendChatMessage(SendChatMessageCommand.of(
+                "46700624-2054-4df6-a9f4-10424a46eccd",
+                chatRoomId,
+                ChatMessage.MessageType.TEXT,
+                "안녕하세요2",
+                chatMessageId1
+        ));
+        entityManager.flush();
+        entityManager.clear();
+
+        Long chatMessageId3 = service.sendChatMessage(SendChatMessageCommand.of(
+                "68e000ef-e717-4b1e-97f1-1baabafda524",
+                chatRoomId,
+                ChatMessage.MessageType.TEXT,
+                "안녕하세요3",
+                chatMessageId1
+        ));
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        StopWatch watch = new StopWatch();
+        log.info("\n=== Test Start ===");
+        watch.start("쿼리 최적화 후 채팅메시지 조회");
+
+        ChatDto.ChatMessagesInfo result = service.getChatMessagesWithCursor(GetChatMessagesCommand.of(
+                "46700624-2054-4df6-a9f4-10424a46eccd",
+                chatRoomId,
+                LocalDateTime.now() + "__" + 2
+        ));
+        entityManager.flush();
+        entityManager.clear();
+
+        watch.stop();
+        log.info("\n=== Test End ===");
+        System.out.println(watch.prettyPrint());
+
+        // then
+        Assertions.assertThat(result.getChatMessageInfos())
+                .extracting(ChatDto.ChatMessageInfo::getContent)
+                .containsExactly(
+                        "안녕하세요3",
+                        "안녕하세요2"
+                );
+
+        Assertions.assertThat(result.getLastReadMessageIdInfos().values())
+                .containsOnlyNulls();
+
+        Assertions.assertThat(chatParticipantRepository.findAllByParticipantId("46700624-2054-4df6-a9f4-10424a46eccd"))
+                .extracting(ChatParticipantJpaEntity::getLastReadMessageId)
+                .containsOnly(
+                        chatMessageId3
+                );
+
+        Assertions.assertThat(Long.parseLong(
+                result.getNextCursor().split("_")[1]))
+                .isEqualTo(chatMessageId2);
     }
 }
