@@ -3,18 +3,15 @@ package io.playground.chatservice.application.chat.command;
 public record GetChatMessagesCommand(
         String userId,
         Long chatRoomId,
-        int page,
-        int size
+        String limit
 ) {
     public static GetChatMessagesCommand of(String userId,
                                             Long chatRoomId,
-                                            int page,
-                                            int size) {
+                                            String limit) {
         return new GetChatMessagesCommand(
                 userId,
                 chatRoomId,
-                page,
-                size
+                limit
         );
     }
 }

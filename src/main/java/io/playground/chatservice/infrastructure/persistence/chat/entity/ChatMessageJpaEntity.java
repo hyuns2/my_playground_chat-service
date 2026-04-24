@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "CHAT_MESSAGE", indexes = {
-        @Index(name = "idx_chatRoomId_createdAt", columnList = "chat_room_id, created_at")
+        @Index(name = "idx_chatRoomId_createdAt", columnList = "chat_room_id, created_at"),
+        @Index(name = "idx_createdAt_id", columnList = "created_at, id")
 })
 public class ChatMessageJpaEntity {
     @Id

@@ -68,12 +68,15 @@ public class ChatResponseDto {
 
         List<ChatMessageInfo> chatMessageInfoInfos;
 
+        String nextCursor;
+
         public static GetChatMessagesInfo from(ChatDto.ChatMessagesInfo result) {
             return new GetChatMessagesInfo(
                     result.getLastReadMessageIdInfos(),
                     result.getChatMessageInfos().stream()
                             .map(ChatResponseDto.ChatMessageInfo::from)
-                            .toList()
+                            .toList(),
+                    result.getNextCursor()
             );
         }
     }

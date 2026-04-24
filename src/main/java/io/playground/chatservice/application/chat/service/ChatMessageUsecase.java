@@ -7,5 +7,7 @@ import io.playground.chatservice.application.chat.dto.ChatDto;
 public interface ChatMessageUsecase {
     Long sendChatMessage(SendChatMessageCommand command);
 
-    ChatDto.ChatMessagesInfo getChatMessages(GetChatMessagesCommand command);
+    ChatDto.ChatMessagesInfo getChatMessagesWithPaging(GetChatMessagesCommand command);
+
+    ChatDto.ChatMessagesInfo getChatMessagesWithCursor(GetChatMessagesCommand command);
 }

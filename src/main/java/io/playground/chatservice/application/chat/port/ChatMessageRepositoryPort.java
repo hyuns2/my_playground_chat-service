@@ -4,6 +4,7 @@ import io.playground.chatservice.application.chat.dto.ChatDto;
 import io.playground.chatservice.domain.chat.message.ChatMessage;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ChatMessageRepositoryPort {
@@ -11,5 +12,7 @@ public interface ChatMessageRepositoryPort {
 
     Long save(ChatMessage chatMessage);
 
-    List<ChatDto.ChatMessageInfo> findAllByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId, Pageable pageable);
+    List<ChatDto.ChatMessageInfo> findPageByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId, Pageable pageable);
+
+    List<ChatDto.ChatMessageInfo> findAllByCursor(Long chatRoomId, LocalDateTime createdAt, Long chatMessageId, int size);
 }

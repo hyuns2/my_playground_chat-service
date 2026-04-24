@@ -8,9 +8,11 @@ import io.playground.chatservice.infrastructure.persistence.chat.entity.ChatRoom
 import io.playground.chatservice.infrastructure.persistence.chat.repository.ChatMessageJpaRepository;
 import io.playground.chatservice.infrastructure.persistence.chat.repository.ChatRoomJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -37,18 +39,30 @@ public class ChatMessagePersistenceAdapter implements ChatMessageRepositoryPort 
         ).getId();
     }
 
-    @Override
-    public List<ChatDto.ChatMessageInfo> findAllByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId, Pageable pageable) {
-        return chatMessageRepository.findPageByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable).stream()
-                .map(ChatMessageJpaEntity::toDto)
-                .toList();
-    }
-
     private ChatRoomJpaEntity toReferenceChatRoomEntity(Long chatRoomId) {
         return chatRoomRepository.getReferenceById(chatRoomId);
     }
 
     private ChatMessageJpaEntity toReferenceChatMessageEntity(Long chatMessageId) {
         return chatMessageRepository.getReferenceById(chatMessageId);
+    }
+
+    @Override
+    public List<ChatDto.ChatMessageInfo> findPageByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId, Pageable pageable) {
+        return chatMessageRepository.findPageByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable).stream()
+                .map(ChatMessageJpaEntity::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<ChatDto.ChatMessageInfo> findAllByCursor(Long chatRoomId, LocalDateTime createdAt, Long chatMessageId, int size) {
+        return chatMessageRepository.findAllByCursor(
+                        chatRoomId,
+                        createdAt,
+                        chatMessageId,
+                        PageRequest.of(0, size)
+                ).stream()
+                .map(ChatMessageJpaEntity::toDto)
+                .toList();
     }
 }

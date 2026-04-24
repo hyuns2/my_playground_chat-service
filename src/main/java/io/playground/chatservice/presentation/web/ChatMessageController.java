@@ -24,20 +24,36 @@ public class ChatMessageController {
         );
     }
 
-    @GetMapping("/messages/{chatRoomId}")
+    @GetMapping("/messages-paging/{chatRoomId}")
     @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<ChatResponseDto.GetChatMessagesInfo> getChatMessages(@AuthenticationPrincipal AuthPrincipal authPrincipal,
-                                                                               @PathVariable Long chatRoomId,
-                                                                               @RequestParam int page,
-                                                                               @RequestParam int size) {
+    public ResponseEntity<ChatResponseDto.GetChatMessagesInfo> getChatMessagesWithPaging(@AuthenticationPrincipal AuthPrincipal authPrincipal,
+                                                                                         @PathVariable Long chatRoomId,
+                                                                                         @RequestParam String limit) {
         return ResponseEntity.ok(
                 ChatResponseDto.GetChatMessagesInfo.from(
-                        chatMessageUsecase.getChatMessages(
+                        chatMessageUsecase.getChatMessagesWithPaging(
                                 GetChatMessagesCommand.of(
                                         authPrincipal.userId(),
                                         chatRoomId,
-                                        page,
-                                        size
+                                        limit
+                                )
+                        )
+                )
+        );
+    }
+
+    @GetMapping("/messages-cursor/{chatRoomId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<ChatResponseDto.GetChatMessagesInfo> getChatMessagesWithCursor(@AuthenticationPrincipal AuthPrincipal authPrincipal,
+                                                                                         @PathVariable Long chatRoomId,
+                                                                                         @RequestParam String limit) {
+        return ResponseEntity.ok(
+                ChatResponseDto.GetChatMessagesInfo.from(
+                        chatMessageUsecase.getChatMessagesWithCursor(
+                                GetChatMessagesCommand.of(
+                                        authPrincipal.userId(),
+                                        chatRoomId,
+                                        limit
                                 )
                         )
                 )

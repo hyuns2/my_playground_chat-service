@@ -81,11 +81,15 @@ public class ChatDto {
 
         List<ChatMessageInfo> chatMessageInfos;
 
+        String nextCursor;
+
         public static ChatMessagesInfo of(Map<String, Long> lastReadMessageIdInfos,
-                                          List<ChatMessageInfo> chatMessageInfos) {
+                                          List<ChatMessageInfo> chatMessageInfos,
+                                          String nextCursor) {
             return new ChatMessagesInfo(
                     lastReadMessageIdInfos,
-                    chatMessageInfos
+                    chatMessageInfos,
+                    nextCursor
             );
         }
     }

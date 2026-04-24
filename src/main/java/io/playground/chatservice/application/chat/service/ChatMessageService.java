@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ public class ChatMessageService implements ChatMessageUsecase {
     private final ChatParticipantRepositoryPort chatParticipantRepositoryPort;
     private final ChatMessageRepositoryPort chatMessageRepositoryPort;
     private final EventPublisherPort eventPublisherPort;
+    private final static int DEFAULT_LIMIT_SIZE = 20;
 
     @Override
     @Transactional
@@ -111,28 +113,95 @@ public class ChatMessageService implements ChatMessageUsecase {
 
     @Override
     @Transactional
-    public ChatDto.ChatMessagesInfo getChatMessages(GetChatMessagesCommand command) {
+    public ChatDto.ChatMessagesInfo getChatMessagesWithPaging(GetChatMessagesCommand command) {
         Map<String, Long> lastReadMessageIdInfos = chatParticipantRepositoryPort
                 .findLastReadMessageIdInfosByChatRoomId(command.chatRoomId());
         if (lastReadMessageIdInfos.isEmpty())
             throw new CustomException(CustomErrorCode.INVALID_CHAT_PARTICIPANT);
 
+        String temp = command.limit().split("_")[0];
+        int page = temp != null && !temp.isBlank() ?
+                Integer.parseInt(temp) :
+                0;
+        temp = command.limit().split("_")[1];
+        int size = temp != null && !temp.isBlank() ?
+                Integer.parseInt(temp) :
+                DEFAULT_LIMIT_SIZE;
+
         List<ChatDto.ChatMessageInfo> chatMessageInfos = chatMessageRepositoryPort
-                .findAllByChatRoomIdOrderByCreatedAtDesc(
+                .findPageByChatRoomIdOrderByCreatedAtDesc(
                         command.chatRoomId(),
-                        PageRequest.of(command.page(),
-                                command.size(),
+                        PageRequest.of(page,
+                                size,
                                 Sort.by(Sort.Direction.DESC, "createdAt")
                         )
                 );
 
-        if (command.page() == 0 && !chatMessageInfos.isEmpty())
+        if (page == 0 && !chatMessageInfos.isEmpty())
             chatParticipantRepositoryPort.updateLastReadMessageIdByParticipantId(
                     chatMessageInfos.get(0).getChatMessageId(),
                     command.userId()
             );
 
+        String nextCursor = null;
+        if (!chatMessageInfos.isEmpty()) {
+            ChatDto.ChatMessageInfo lastChatMessageInfo = chatMessageInfos.get(chatMessageInfos.size() - 1);
+            nextCursor = lastChatMessageInfo.getCreatedAt() + "_" + lastChatMessageInfo.getChatMessageId();
+        }
+
         return ChatDto.ChatMessagesInfo.of(
-                lastReadMessageIdInfos, chatMessageInfos);
+                lastReadMessageIdInfos,
+                chatMessageInfos,
+                nextCursor
+        );
+    }
+
+    public ChatDto.ChatMessagesInfo getChatMessagesWithCursor(GetChatMessagesCommand command) {
+        Map<String, Long> lastReadMessageIdInfos = chatParticipantRepositoryPort
+                .findLastReadMessageIdInfosByChatRoomId(command.chatRoomId());
+        if (lastReadMessageIdInfos.isEmpty())
+            throw new CustomException(CustomErrorCode.INVALID_CHAT_PARTICIPANT);
+
+        String temp = command.limit().split("_")[0];
+        LocalDateTime createdAt = temp != null && !temp.isBlank() ?
+                LocalDateTime.parse(temp) :
+                LocalDateTime.now();
+        temp = command.limit().split("_")[1];
+        Long id = temp != null && !temp.isBlank() ?
+                Long.parseLong(temp) :
+                null;
+        temp = command.limit().split("_")[2];
+        int size = temp != null && !temp.isBlank() ?
+                Integer.parseInt(temp) :
+                DEFAULT_LIMIT_SIZE;
+
+        List<ChatDto.ChatMessageInfo> chatMessageInfos = chatMessageRepositoryPort
+                .findAllByCursor(
+                        command.chatRoomId(),
+                        createdAt,
+                        id,
+                        size
+                );
+
+        // Todo: 임시 구현 -> 분산 환경 고려 & 정확한 최신 메시지인지 확인 필요
+        if (!chatMessageInfos.isEmpty() &&
+                (lastReadMessageIdInfos.get(command.userId()) == null ||
+                lastReadMessageIdInfos.get(command.userId()) < chatMessageInfos.get(0).getChatMessageId()))
+            chatParticipantRepositoryPort.updateLastReadMessageIdByParticipantId(
+                    chatMessageInfos.get(0).getChatMessageId(),
+                    command.userId()
+            );
+
+        String nextCursor = null;
+        if (!chatMessageInfos.isEmpty()) {
+            ChatDto.ChatMessageInfo lastChatMessageInfo = chatMessageInfos.get(chatMessageInfos.size() - 1);
+            nextCursor = lastChatMessageInfo.getCreatedAt() + "_" + lastChatMessageInfo.getChatMessageId();
+        }
+
+        return ChatDto.ChatMessagesInfo.of(
+                lastReadMessageIdInfos,
+                chatMessageInfos,
+                nextCursor
+        );
     }
 }
